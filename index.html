@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choudou - AI Voice Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="main-title">Choudou</h1>
+            <p class="subtitle">Your AI Voice Assistant</p>
+        </header>
+
+        <main>
+            <div class="circular-interface">
+                <div class="record-button-container">
+                    <button id="recordButton" class="record-button">
+                        <div class="button-content">
+                            <span class="mic-icon">🎤</span>
+                            <span class="button-text">Call Choudou</span>
+                        </div>
+                    </button>
+                </div>
+                
+                <div class="chat-container" id="chatContainer">
+                    <!-- Messages will appear here -->
+                </div>
+                
+                <div class="status" id="status"></div>
+            </div>
+        </main>
+
+        <footer class="powered-by">
+            Powered by <a href="#" class="elevenlabs-link">ETUGRAND</a>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
