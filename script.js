@@ -177,28 +177,60 @@ async function sendAudioToWebhook(audioBlob) {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
-        // Get the response as blob since it's an audio file
-        const responseBlob = await response.blob();
-        console.log('Received audio response:', responseBlob);
-        
-        // Create a URL for the audio blob
-        const audioUrl = URL.createObjectURL(responseBlob);
-        
-        // Display the response
-        updateStatus('Playing response...');
-        displayAgentResponse({ audioUrl });
+
+        // Check content type of response
+        const contentType = response.headers.get('content-type');
+        let responseData;
+
+        if (contentType && contentType.includes('application/json')) {
+            // Handle JSON response
+            responseData = await response.json();
+            console.log('Received JSON response:', responseData);
+            
+            if (responseData.error) {
+                throw new Error(responseData.error);
+            }
+            
+            // Check if JSON contains audio data in base64
+            if (responseData.audio) {
+                displayAgentResponse({ audio: responseData.audio });
+            } else if (responseData.text) {
+                displayAgentResponse({ text: responseData.text });
+            } else {
+                throw new Error('Invalid response format from server');
+            }
+        } else if (contentType && (contentType.includes('audio/') || contentType.includes('application/octet-stream'))) {
+            // Handle audio blob response
+            const audioBlob = await response.blob();
+            console.log('Received audio blob:', audioBlob);
+            
+            if (audioBlob.size === 0) {
+                throw new Error('Received empty audio response');
+            }
+            
+            const audioUrl = URL.createObjectURL(audioBlob);
+            updateStatus('Playing response...');
+            displayAgentResponse({ audioUrl });
+        } else {
+            throw new Error(`Unexpected content type: ${contentType}`);
+        }
         
     } catch (error) {
-        console.error('Error sending audio:', error);
-        updateStatus('Error sending message');
+        console.error('Error in webhook communication:', error);
+        updateStatus('Error: ' + error.message);
         
-        // Show error message
+        // Show error message in chat
         const errorDiv = document.createElement('div');
         errorDiv.className = 'message agent-message';
-        errorDiv.textContent = `Error: ${error.message || 'Failed to send message'}`;
+        errorDiv.innerHTML = `
+            <div class="message-header">Error</div>
+            <div class="message-content" style="color: #ff4444;">
+                ${error.message || 'Failed to communicate with the server'}
+            </div>
+        `;
         chatContainer.appendChild(errorDiv);
-        errorDiv.style.display = 'block';
+        errorDiv.style.display = 'flex';
+        chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 }
 
