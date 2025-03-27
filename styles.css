@@ -306,7 +306,7 @@ footer.powered-by {
     opacity: 0.8;
 }
 
-.elevenlabs-link {
+.etugrand-link {
     color: var(--white);
     text-decoration: none;
     font-weight: 600;
@@ -314,7 +314,7 @@ footer.powered-by {
     transition: opacity 0.3s ease;
 }
 
-.elevenlabs-link:hover {
+.etugrand-link:hover {
     opacity: 0.8;
 }
 
