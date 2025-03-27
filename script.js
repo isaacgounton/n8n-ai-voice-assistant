@@ -25,16 +25,30 @@ if (!navigator.mediaDevices || !window.MediaRecorder) {
     requestMicrophonePermission();
 }
 
+// Update status display function
+function updateStatus(message) {
+    if (statusElement) {
+        statusElement.textContent = message;
+        statusElement.classList.add('visible');
+        
+        // Hide status after 3 seconds if it's not a recording status
+        if (!message.includes('Recording')) {
+            setTimeout(() => {
+                statusElement.classList.remove('visible');
+            }, 3000);
+        }
+    }
+}
+
 // Request microphone permission
 async function requestMicrophonePermission() {
     try {
-        // Store the stream instead of stopping it
         audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         hasPermission = true;
-        statusElement.textContent = 'Click to start recording';
+        updateStatus('Click to start recording');
     } catch (error) {
         console.error('Error getting microphone permission:', error);
-        statusElement.textContent = 'Please allow microphone access';
+        updateStatus('Please allow microphone access');
     }
 }
 
@@ -60,7 +74,7 @@ async function toggleRecording(e) {
 // Start recording function
 async function startRecording() {
     try {
-        statusElement.textContent = 'Recording...';
+        updateStatus('Recording...');
         circularInterface.classList.add('recording');
         recordButton.querySelector('.button-text').textContent = 'Stop Recording';
         
@@ -80,7 +94,7 @@ async function startRecording() {
         isRecording = true;
     } catch (error) {
         console.error('Error starting recording:', error);
-        statusElement.textContent = 'Error accessing microphone';
+        updateStatus('Error accessing microphone');
         circularInterface.classList.remove('recording');
         recordButton.querySelector('.button-text').textContent = 'Call AI agent';
         isRecording = false;
@@ -90,7 +104,7 @@ async function startRecording() {
 // Update recording timer display
 function updateRecordingTimer() {
     const seconds = Math.floor((Date.now() - recordingStartTime) / 1000);
-    statusElement.textContent = `Recording... ${seconds}s`;
+    updateStatus(`Recording... ${seconds}s`);
 }
 
 // Stop recording function
@@ -111,7 +125,7 @@ function stopRecording(e) {
     };
     
     mediaRecorder.stop();
-    statusElement.textContent = 'Processing...';
+    updateStatus('Processing...');
 }
 
 // Clean up function - call this when the page is unloaded
@@ -132,19 +146,16 @@ function displayUserAudio(audioBlob) {
     messageDiv.className = 'message user-message audio-message';
     
     messageDiv.innerHTML = `
-        <span>You:</span>
+        <div class="message-header">You</div>
         <div class="audio-controls">
             <audio controls src="${audioUrl}"></audio>
             <div class="waveform">🎤</div>
         </div>
     `;
     
-    // Remove any existing messages
-    const existingMessages = document.querySelectorAll('.message');
-    existingMessages.forEach(msg => msg.remove());
-    
     chatContainer.appendChild(messageDiv);
-    messageDiv.style.display = 'block';
+    messageDiv.style.display = 'flex';
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
 // Send audio to webhook
@@ -155,7 +166,7 @@ async function sendAudioToWebhook(audioBlob) {
         formData.append('voice_message', audioBlob, 'audio.wav');
         
         console.log('Sending audio to webhook...');
-        statusElement.textContent = 'Sending message...';
+        updateStatus('Sending message...');
         
         // Send to webhook
         const response = await fetch(WEBHOOK_URL, {
@@ -175,12 +186,12 @@ async function sendAudioToWebhook(audioBlob) {
         const audioUrl = URL.createObjectURL(responseBlob);
         
         // Display the response
-        statusElement.textContent = 'Playing response...';
+        updateStatus('Playing response...');
         displayAgentResponse({ audioUrl });
         
     } catch (error) {
         console.error('Error sending audio:', error);
-        statusElement.textContent = 'Error sending message';
+        updateStatus('Error sending message');
         
         // Show error message
         const errorDiv = document.createElement('div');
@@ -194,44 +205,39 @@ async function sendAudioToWebhook(audioBlob) {
 // Display agent's response in chat
 function displayAgentResponse(response) {
     const messageDiv = document.createElement('div');
-    messageDiv.className = 'message agent-message';
+    messageDiv.className = 'message agent-message audio-message';
     
     // Check if response is audio or text
     if (response.audioUrl) {
-        // Handle audio response (direct URL)
         messageDiv.innerHTML = `
-            <div class="audio-message">
-                <span>Agent:</span>
-                <div class="audio-controls">
-                    <audio autoplay controls src="${response.audioUrl}" 
-                           onplay="document.getElementById('status').textContent = 'Playing response...'"
-                           onended="document.getElementById('status').textContent = 'Response complete'"></audio>
-                    <div class="waveform">🔊</div>
-                </div>
+            <div class="message-header">Choudou</div>
+            <div class="audio-controls">
+                <audio autoplay controls src="${response.audioUrl}" 
+                       onplay="updateStatus('Playing response...')"
+                       onended="updateStatus('Response complete')"
+                       onpause="updateStatus('')"></audio>
+                <div class="waveform">🔊</div>
             </div>
         `;
     } else if (response.audio) {
-        // Handle base64 audio response (legacy support)
         messageDiv.innerHTML = `
-            <div class="audio-message">
-                <span>Agent:</span>
-                <div class="audio-controls">
-                    <audio autoplay controls src="data:audio/wav;base64,${response.audio}"
-                           onplay="document.getElementById('status').textContent = 'Playing response...'"
-                           onended="document.getElementById('status').textContent = 'Response complete'"></audio>
-                    <div class="waveform">🔊</div>
-                </div>
+            <div class="message-header">Choudou</div>
+            <div class="audio-controls">
+                <audio autoplay controls src="data:audio/wav;base64,${response.audio}"
+                       onplay="updateStatus('Playing response...')"
+                       onended="updateStatus('Response complete')"
+                       onpause="updateStatus('')"></audio>
+                <div class="waveform">🔊</div>
             </div>
         `;
     } else {
-        // Handle text response
-        messageDiv.textContent = `Agent: ${response.text || response}`;
+        messageDiv.innerHTML = `
+            <div class="message-header">Choudou</div>
+            <div class="message-content">${response.text || response}</div>
+        `;
     }
     
-    // Remove any existing agent messages
-    const existingAgentMessages = document.querySelectorAll('.agent-message');
-    existingAgentMessages.forEach(msg => msg.remove());
-    
     chatContainer.appendChild(messageDiv);
-    messageDiv.style.display = 'block';
+    messageDiv.style.display = 'flex';
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 } 
