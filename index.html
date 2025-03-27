@@ -6,6 +6,10 @@
     <title>Choudou - AI Voice Assistant</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Add Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Add favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎙️</text></svg>">
 </head>
 <body>
     <div class="container">
@@ -19,7 +23,7 @@
                 <div class="record-button-container">
                     <button id="recordButton" class="record-button">
                         <div class="button-content">
-                            <span class="mic-icon">🎤</span>
+                            <span class="mic-icon"><i class="fa-solid fa-microphone"></i></span>
                             <span class="button-text">Call Choudou</span>
                         </div>
                     </button>
@@ -28,6 +32,22 @@
             </div>
             
             <div class="chat-container" id="chatContainer">
+                <!-- Chat header -->
+                <div class="chat-header">
+                    <i class="fa-solid fa-comments"></i> Conversation
+                </div>
+                
+                <!-- Empty state when no messages -->
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-state-icon">
+                        <i class="fa-solid fa-headset"></i>
+                    </div>
+                    <h3 class="empty-state-title">Start a conversation</h3>
+                    <p class="empty-state-description">
+                        Press the microphone button and speak to Choudou
+                    </p>
+                </div>
+                
                 <!-- Messages will appear here -->
             </div>
         </main>
